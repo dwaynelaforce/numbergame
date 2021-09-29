@@ -8,10 +8,10 @@ import os, sys, time
 import colorama
 
 DEBUG = colorama.Fore.MAGENTA + "*** DEBUG ***"
+colorama.init(autoreset=True)
 
 class NumberGame():
     def __init__(self):
-        self.gameover = False
         self.count_guesses = 0
         self.range = None
         self.number = None
@@ -35,7 +35,6 @@ class NumberGame():
         }
     
     def play(self):
-        colorama.init(autoreset=True)
         
         print(colorama.Fore.CYAN + "\nLet's play a numbers game!\n")
         time.sleep(0.25)
@@ -53,6 +52,32 @@ class NumberGame():
         print(DEBUG, self.range, self.number)
 
         self.player_guess()
+
+        print(colorama.Fore.GREEN + "You got it!", colorama.Fore.CYAN + str(self.number), "was my number.")
+        time.sleep(0.25)
+        score = (11 - self.count_guesses) * self.difficulties[self.difficulty]['multiplier'] * 100
+        if score < 0: 
+            score = 0
+        print("Your score:", colorama.Fore.MAGENTA + str(score))
+        time.sleep(0.25)
+        valid = False
+        while not valid:
+            play_again = self.get_user_input("Play again? y/n ")
+            if not play_again in ['y','n']:
+                print("Incorrect input.")
+                continue
+            valid = True
+            if play_again == 'y':
+                self.reset()
+                self.play()
+            else:
+                print("Thanks for playing, goodbye!")
+
+    def reset(self):
+        self.count_guesses = 0
+        self.range = None
+        self.number = None
+        self.difficulty = None
 
     def get_user_input(self, prompt):
         user_input = input(prompt) if prompt else input("> ")
@@ -103,16 +128,12 @@ class NumberGame():
         
         if not guess == self.number:
             if self.number < guess:
-                print("Nope!  My number is", colorama.Fore.CYAN + "lower", "than", 
-                      colorama.Fore.YELLOW + str(guess))
+                print(colorama.Fore.RED + "Nope!", "My number is", 
+                      colorama.Fore.CYAN + "lower", "than", colorama.Fore.YELLOW + str(guess))
             elif self.number > guess:
-                print("Nope!  My number is", colorama.Fore.CYAN + "higher", "than",
-                colorama.Fore.YELLOW + str(guess))
+                print(colorama.Fore.RED + "Nope!", "My number is", 
+                      colorama.Fore.CYAN + "higher", "than", colorama.Fore.YELLOW + str(guess))
             self.player_guess()
-        else:
-            # the game is over
-            print("you win!")
-            pass
         
 
 if __name__ == "__main__":
