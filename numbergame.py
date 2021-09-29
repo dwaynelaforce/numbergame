@@ -1,4 +1,14 @@
 from random import randint
+import os
+
+class NumberGame():
+    def play():
+        pass
+    def introduce_player():
+        pass
+    def select_difficulty():
+        pass
+    
 
 def game():
     min, max = (1, 10)
