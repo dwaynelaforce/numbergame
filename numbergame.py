@@ -134,7 +134,6 @@ class NumberGame():
                 print(colorama.Fore.RED + "Nope!", "My number is", 
                       colorama.Fore.CYAN + "higher", "than", colorama.Fore.YELLOW + str(guess))
             self.player_guess()
-        
 
 if __name__ == "__main__":
     NumberGame().play()
