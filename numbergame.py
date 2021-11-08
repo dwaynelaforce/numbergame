@@ -1,13 +1,12 @@
 # TODO
-# implement player score
 # implement leaderboard in some kind of permanent file in logs
-# user needs to be able to immediately play again
 
 from random import randint
 import os, sys, time
 import colorama
 
-DEBUG = colorama.Fore.MAGENTA + "*** DEBUG ***"
+DEBUG = False
+
 colorama.init(autoreset=True)
 
 class NumberGame():
@@ -49,7 +48,7 @@ class NumberGame():
               colorama.Fore.YELLOW + str(self.range[0]), "and",
               colorama.Fore.YELLOW + str(self.range[1]), "(inclusive).\n")
     
-        print(DEBUG, self.range, self.number)
+        if DEBUG: print(colorama.Fore.MAGENTA + "*** DEBUG ***", "number is:", self.number)
 
         self.player_guess()
 
@@ -60,6 +59,9 @@ class NumberGame():
             score = 0
         print("Your score:", colorama.Fore.MAGENTA + str(score))
         time.sleep(0.25)
+        
+        self.process_leaderboard(score)
+        
         valid = False
         while not valid:
             play_again = self.get_user_input("Play again? y/n ")
@@ -79,8 +81,8 @@ class NumberGame():
         self.number = None
         self.difficulty = None
 
-    def get_user_input(self, prompt):
-        user_input = input(prompt) if prompt else input("> ")
+    def get_user_input(self, prompt="> "):
+        user_input = input(prompt)
         user_input = user_input.casefold()
         if user_input in ("exit", "quit"):
             time.sleep(0.25)
@@ -90,8 +92,7 @@ class NumberGame():
         return user_input
 
     def select_difficulty(self):
-        valid = False
-        while not valid:
+        while True:
             print("Game settings:")
             time.sleep(0.25)
             for key in self.difficulties:
@@ -103,17 +104,16 @@ class NumberGame():
             difficulty = self.get_user_input(prompt="Select a difficulty: ")
             time.sleep(0.25)
             if difficulty in self.difficulties.keys():
-                valid = True
                 self.difficulty = difficulty
                 print(f"\nDifficulty set to {self.difficulties[difficulty]['printed']}\n")
+                return
             else:
                 print(colorama.Fore.RED + "\nInvalid input. Try again.\n")
 
     def player_guess(self):
-        valid = False
         error_msg = (colorama.Fore.RED + "Invalid input.  Please enter a whole "
-                    f"number /integer in range {self.range[0]} - {self.range[1]}.")
-        while not valid:
+                    f"number / integer in range {self.range[0]} - {self.range[1]}.")
+        while True:
             guess = self.get_user_input("Your guess: ")
             try:
                 guess = int(guess)
@@ -124,7 +124,7 @@ class NumberGame():
                 print(error_msg)
                 continue
             self.count_guesses += 1
-            valid = True
+            break
         
         if not guess == self.number:
             if self.number < guess:
@@ -134,6 +134,64 @@ class NumberGame():
                 print(colorama.Fore.RED + "Nope!", "My number is", 
                       colorama.Fore.CYAN + "higher", "than", colorama.Fore.YELLOW + str(guess))
             self.player_guess()
+
+    def process_leaderboard(self, score):
+        # print leaderboard
+        current_leaders = []
+        with open("leaderboard.txt", "r") as file:
+            for line in file:
+                leader = line.split(",")
+                current_leaders.append((int(leader[0]), leader[1].replace("\n","")))
+        current_leaders.sort()
+        current_leaders.reverse()
+        
+        print("\n" ,colorama.Fore.MAGENTA + "* * * LEADERBOARD * * *")
+        for leader in current_leaders:
+            points, name = leader[0], leader[1]
+            print(name.upper(), points)
+        print("")
+
+        # evaluate whether or not the player's score qualifies for the leaderboard
+        add_player_to_leaderboard = False
+        if len(current_leaders) < 10:
+            add_player_to_leaderboard = True
+        else:
+            for leader in current_leaders:
+                leader_score = leader[0]
+                if score > leader_score:
+                    add_player_to_leaderboard = True
+                    break
+
+        if not add_player_to_leaderboard: return
+
+        # offer player to record name on leaderboard
+        while True:
+            print(colorama.Fore.GREEN + "Your score is in the top ten!")
+            print("Enter your initials for the leaderboard? Max 3 characters. "
+                  "To continue without adding initials, leave blank.")
+            name = self.get_user_input()
+            if not 0 <= len(name) <= 3:
+                print(colorama.Fore.RED + "Invalid input.")
+                continue
+            break
+        if len(name) is 0: return
+
+        # add player to leaderboard and overwrite file
+        if len(name) < 3:
+            name = name + (" " * (3-len(name))) #add whitespace in case name is too short
+        current_leaders.append((score, name))
+        current_leaders.sort()
+        current_leaders.reverse()
+        if len(current_leaders) > 10:
+            current_leaders = current_leaders[:10]
+        leaderboard_str = ""
+        for leader in current_leaders:
+            leader_score = leader[0]
+            leader_name = leader[1]
+            leaderboard_str += f"{str(leader_score)},{leader_name}\n"
+        with open("leaderboard.txt", "w") as file:
+            file.write(leaderboard_str)
+        
 
 if __name__ == "__main__":
     NumberGame().play()
