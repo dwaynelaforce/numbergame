@@ -64,6 +64,7 @@ class NumberGame():
         
         valid = False
         while not valid:
+            print("\n")
             play_again = self.get_user_input("Play again? y/n ")
             if not play_again in ['y','n']:
                 print("Incorrect input.")
@@ -138,18 +139,19 @@ class NumberGame():
     def process_leaderboard(self, score):
         # print leaderboard
         current_leaders = []
-        with open("leaderboard.txt", "r") as file:
-            for line in file:
-                leader = line.split(",")
-                current_leaders.append((int(leader[0]), leader[1].replace("\n","")))
+        if os.path.exists("leaderboard.txt"):
+            with open("leaderboard.txt", "r") as file:
+                for line in file:
+                    leader = line.split(",")
+                    current_leaders.append((int(leader[0]), leader[1].replace("\n","")))
         current_leaders.sort()
         current_leaders.reverse()
-        
+        time.sleep(0.25)
         print("\n" ,colorama.Fore.MAGENTA + "* * * LEADERBOARD * * *")
         for leader in current_leaders:
             points, name = leader[0], leader[1]
+            time.sleep(0.1)
             print(name.upper(), points)
-        print("")
 
         # evaluate whether or not the player's score qualifies for the leaderboard
         add_player_to_leaderboard = False
@@ -166,15 +168,18 @@ class NumberGame():
 
         # offer player to record name on leaderboard
         while True:
-            print(colorama.Fore.GREEN + "Your score is in the top ten!")
+            time.sleep(0.25)
+            print("\n") 
+            print(colorama.Fore.GREEN + "You made it into the top ten!")
+            time.sleep(0.5)
             print("Enter your initials for the leaderboard? Max 3 characters. "
-                  "To continue without adding initials, leave blank.")
+                    "Leave blank if you don't want to be on the leaderboard.")
             name = self.get_user_input()
             if not 0 <= len(name) <= 3:
                 print(colorama.Fore.RED + "Invalid input.")
                 continue
             break
-        if len(name) is 0: return
+        if not name: return
 
         # add player to leaderboard and overwrite file
         if len(name) < 3:
@@ -191,6 +196,18 @@ class NumberGame():
             leaderboard_str += f"{str(leader_score)},{leader_name}\n"
         with open("leaderboard.txt", "w") as file:
             file.write(leaderboard_str)
+
+        # print leaderboard again with player line highlighted
+        print("\n" ,colorama.Fore.MAGENTA + "* * * LEADERBOARD * * *")
+        for leader in current_leaders:
+            points, leader_name = leader[0], leader[1]
+            printline = ""
+            if all([leader_name == name, points == score]):
+                printline = colorama.Fore.CYAN
+            printline += f"   {leader_name.upper()} {str(points)}"
+            time.sleep(0.1)
+            print(printline)
+
         
 
 if __name__ == "__main__":

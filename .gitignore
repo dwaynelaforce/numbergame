@@ -1,2 +1,3 @@
+leaderboard.txt
 venv/
-logs/**
+__pycache__/
